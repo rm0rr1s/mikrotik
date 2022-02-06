@@ -8,6 +8,12 @@ import requests
 import json
 
 """ Define common variables """
+piaServerList = 'https://serverlist.piaservers.net/vpninfo/servers/v4'
+piaTokenApi = 'https://www.privateinternetaccess.com/api/client/v2/token'
+piaDedicatedIpApi = 'https://www.privateinternetaccess.com/api/client/v2/dedicated_ip'
+piaCA = os.path.join(sys.path[0], "ca.rsa.4096.crt")
+piaDNS = '10.0.0.242'
+
 helpArg = False
 debugMode = False
 listRegions = False
@@ -32,7 +38,7 @@ if helpArg:
     print("PIAWireguard.py help             Help text (This)")
     print("PIAWireguard.py debug            Runs script with verbose output of the script")
     print("PIAWireguard.py listregions      Lists usable PIA regions for the script")
-    print("PIAWireguard.py confugure        Configure/Reconfigure Wireguard interface")
+    print("PIAWireguard.py configure        Configure/Reconfigure Wireguard interface")
     print("")
     sys.exit(0)
 
@@ -58,11 +64,32 @@ def checkConfig(key):
     return val
 
 
+def listRegions():
+    r = requests.get(piaServerList)
+    piaRegions = json.loads(r.text.split('\n')[0])['regions']
+    regionList = list()
+    for piaRegion in piaRegions:
+        regionList.append(piaRegion['name'] + " | ID: " + piaRegion['id'] + " | Port forwarding: " + str(
+            piaRegion['port_forward']) + " | Geo-located: " + str(piaRegion['geo']))
+        regionList.sort()
+        for region in regionList:
+            print(region)
+
+
+if listRegions:
+    listRegions()
+
+
 if configureWireguard:
-    configFile = os.path.join(sys.path[0], 'mikrotik.json')
+    configFile = os.path.join(sys.path[0], 'settings.json')
     if os.path.isfile(configFile):
         config = json.loads(open(configFile, 'r').read())
         mikrotikHost = checkConfig('mikrotikHost')
+        mikrotikUserName = checkConfig('mikrotikUserName')
+        mikrotikUserPassword = checkConfig('mikrotikUserPassword')
+        piaUserName = checkConfig('piaUserName')
+        piaUserPassword = checkConfig('piaUserPassword')
+
 
 
 
